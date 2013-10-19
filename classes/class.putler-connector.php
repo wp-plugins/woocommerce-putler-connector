@@ -38,7 +38,7 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
 
             $this->text_domain = 'putler_connector';
 
-            $this->api_url = 'https://api.putler.com/inbound/';
+            $this->api_url = 'http://api.putler.com/inbound/';
             
             if ( is_admin() ) {
                 $this->settings_url = admin_url('tools.php?page=putler_connector');
@@ -242,7 +242,7 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
                                'body' => $csv_data
                             )
                         );
-            
+
             if (is_wp_error( $result )) {
                 return $result;
             }

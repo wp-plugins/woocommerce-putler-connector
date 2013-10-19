@@ -3,7 +3,7 @@ Contributors: putler, storeapps
 Tags: administration, putler, woocommerce, ecommerce, management, reporting, analysis, sales, products, orders, history, customers, graphs, charts
 Requires at least: 3.3
 Tested up to: 3.6.1
-Stable tag: 1.0
+Stable tag: 1.1
 License: GPL 3.0
 
 
@@ -15,14 +15,14 @@ WooCommerce Putler Connector sends transactions to Putler using Putler's Inbound
 
 You need a Putler account (Free or Paid), and a WooCommerce based store to use this plugin.
 
-== Installation ==
+= Installation =
 
 1. Ensure you have latest version of [WooCommerce](http://www.woothemes.com/woocommerce/) plugin installed
 2. Unzip and upload contents of the plugin to your `/wp-content/plugins/` directory
 3. Activate the plugin through the 'Plugins' menu in WordPress
 4. Click on 'WooCommerce Putler Connector ' option within WordPress admin sidebar menu
 
-== Configuration ==
+= Configuration =
 
 Go to Wordpress > Tools > Putler Connector
 
@@ -34,7 +34,7 @@ This is where you need to enter Putler API Token and Putler Email Address to syn
 
 All past orders will be sent to Putler. New orders will be automatically synced.
 
-== Where to find your Putler API Token ==
+= Where to find your Putler API Token? =
 
 1. Sign up for a free account at: [Putler](http://www.putler.com/)
 2. Download and install Putler on your desktop
@@ -51,15 +51,23 @@ Yes, you can use this connector with free version of Putler.
 
 1. WooCommerce Putler Connector Settings Page
 
-2. Add Account in Putler - and get API token
+2. Putler Sales Dashboard
+
+3. Adding a new account in Putler - Notice API token that needs to be copied to Putler Connector settings
 
 == Changelog ==
+
+= 1.1 =
+* Fixed: Minor Fixes related to variations data getting posted and Putler API url changes
 
 = 1.0 =
 * Initial release 
 
 
 == Upgrade Notice ==
+
+= 1.1 =
+Minor Fixes related to variations data getting posted and Putler API url changes, recommended upgrade.
 
 = 1.0 =
 Welcome!!

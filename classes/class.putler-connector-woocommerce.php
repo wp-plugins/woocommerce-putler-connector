@@ -200,6 +200,9 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                             // Formatting of the Variations Names
                             foreach( $results_variation_att as $variation_att ){
 
+                                $att_name = '';
+                                $att_val = '';
+
                                 if ( strpos($variation_att['meta_key'],'custom') === false ) { 
                                     $variation_att['meta_value'] = $attributes[$variation_att['meta_value']];
                                 }
@@ -210,24 +213,29 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                     $variations[$variation_att['id']] = array();
                                 }
 
+                                if ( strpos($variation_att['meta_key'],'pa') !== false ) {
+                                     $att_name = substr($variation_att['meta_key'], strpos($variation_att['meta_key'],'pa')+3);
+                                     $att_val = $variation_att['meta_value'];
+                                } else if ( strpos($variation_att['meta_key'],'custom') !== false ) {
+                                    $att_name = 'custom';
+                                    $att_val = $variation_att['meta_value'];
+                                }    
+
                                 if ( $i > 1 ) {
 
                                     if ( $i == 2 ) {
-                                        $variations[$variation_att['id']][0]['option1_value'] = $variations[$variation_att['id']][0]['option1_value'] . ', ' . $variations[$variation_att['id']][1]['option1_value'];
+                                        $variations[$variation_att['id']][0]['option1_value'] = $variations[$variation_att['id']][0]['option1_name'] . ' : ' . $variations[$variation_att['id']][0]['option1_value'] . ', '
+                                                                                                . $variations[$variation_att['id']][1]['option1_name'] . ' : ' . $variations[$variation_att['id']][1]['option1_value'];
                                         unset($variations[$variation_att['id']][1]);
                                     }
 
-                                    $variations[$variation_att['id']][0]['option1_name'] = 'attributes';
-                                    $variations[$variation_att['id']][0]['option1_value'] = $variations[$variation_att['id']][0]['option1_value'] . ', ' . $variation_att['meta_value'];
+                                    $variations[$variation_att['id']][0]['option1_name'] = '';
+                                    $variations[$variation_att['id']][0]['option1_value'] = $variations[$variation_att['id']][0]['option1_value'] . ', ' 
+                                                                                            . $att_name . ' : ' . $att_val;
 
                                 } else {
-                                    if ( strpos($variation_att['meta_key'],'pa') !== false ) {
-                                        $variations[$variation_att['id']][$i]['option1_name'] = substr($variation_att['meta_key'], strpos($variation_att['meta_key'],'pa')+3);
-                                        $variations[$variation_att['id']][$i]['option1_value'] = $variation_att['meta_value'];
-                                    } else if ( strpos($variation_att['meta_key'],'custom') !== false ) {
-                                        $variations[$variation_att['id']][$i]['option1_name'] = 'custom';
-                                        $variations[$variation_att['id']][$i]['option1_value'] = $variation_att['meta_value'];
-                                    }    
+                                    $variations[$variation_att['id']][$i]['option1_name'] = $att_name;
+                                    $variations[$variation_att['id']][$i]['option1_value'] = $att_val;
                                 }
 
                                 $i++;

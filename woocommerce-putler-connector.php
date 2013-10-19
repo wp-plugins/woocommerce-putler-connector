@@ -24,7 +24,7 @@ function woocommerce_putler_connector_pre_init () {
 		// If configuration not done, can't track anything...
 		if ( null != get_option('putler_connector_settings', null) ) {
 			// On these events, send order data to Putler
-            if ( is_admin() ) {
+			if ( is_admin() && ( !defined( 'DOING_AJAX' ) || !DOING_AJAX ) ) { 
                 add_action( 'post_updated', 'woocommerce_putler_connector_order_updated' );
             } else {
                 add_action( 'woocommerce_order_status_changed', 'woocommerce_putler_connector_post_order' );
@@ -51,7 +51,6 @@ function woocommerce_putler_connector_order_updated( $post_id ) {
 }
 
 function woocommerce_putler_connector_post_order( $order_id ) {
-
 	woocommerce_putler_connector_init();
 	if (method_exists($GLOBALS['putler_connector'], 'post_order') ) {
 		$GLOBALS['putler_connector']->post_order( $order_id );	
