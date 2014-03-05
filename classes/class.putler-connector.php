@@ -38,7 +38,7 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
 
             $this->text_domain = 'putler_connector';
 
-            $this->api_url = 'http://api.putler.com/inbound/';
+            $this->api_url = 'https://api.putler.com/inbound/';
             
             if ( is_admin() ) {
                 $this->settings_url = admin_url('tools.php?page=putler_connector');
@@ -90,10 +90,10 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
                 <form id="putler_connector_settings_form" action="" method="post">
                     <table cellspacing="15" cellpadding="5">
                         <tr><th><label for="putler_email_address"><?php _e("Your Putler Email Address", $this->text_domain); ?></label></th>
-                            <td><input id="putler_email_address" type="text" size="50" name="putler_email_address" value="<?php echo $this->email_address; ?>"/></td>
+                            <td><input id="putler_email_address" placeholder="test@test.com" type="text" size="50" name="putler_email_address" value="<?php echo $this->email_address; ?>"/></td>
                         </tr>
                         <tr><th><label for="putler_api_token"><?php _e("Your Putler API Token", $this->text_domain); ?></label></th>
-                            <td><input id="putler_api_token" type="text" size="50" name="putler_api_token" value="<?php echo $this->api_token; ?>"/></td>
+                            <td><input id="putler_api_token" placeholder="API Token1, API Token2, ..." type="text" size="50" name="putler_api_token" value="<?php echo $this->api_token; ?>"/></td>
                         </tr>
                         <tr><th>&nbsp;</th>
                             <td><input type="submit" id="putler_connector_submit" class="button-primary" value="<?php _e("Save &amp; Send Past Orders to Putler", $this->text_domain); ?>"><br/><br/>
@@ -117,7 +117,11 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
                 $email = trim($_POST['putler_email_address']);
                 $result = $this->validate_api_info( $token, $email );
                 if ( $result === true ) {
-                    $this->api_token = $settings['api_token'] = $token;
+
+                    $token_unique = implode(",",array_map('trim',(array_unique(array_filter(explode(",",trim($token))))))); // to save only unique token keys
+                    
+                    $this->api_token = $settings['api_token'] = $token_unique;
+
                     $this->email_address = $settings['email_address'] = $email;
                     // Save settings
                     update_option( 'putler_connector_settings', $settings );
@@ -129,6 +133,13 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
                     $response = array( 'status' => 'OK', 'message' => '', 'order_count' => $order_count ) ;
                 } else if ( is_wp_error( $result ) ) {
                     $response['message'] = $result->get_error_message();
+
+                    $err_data = $result->get_error_data();
+
+                    if (!empty($err_data)) {
+                        $response['message'] .= ". '". $err_data ."' token(s) are unauthorized.";
+                    }
+                    
                 }
             }
             die( json_encode( $response ));
@@ -143,6 +154,7 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
                                 )
                             )
                         );
+
             if (is_wp_error( $result )) {
                 return $result;
             }
@@ -150,7 +162,8 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
                 return true;
             } else {
                 if ( !empty($result['response']['code']) && !empty($result['response']['message'])) {
-                    return new WP_Error( $result['response']['code'], $result['response']['message'] );
+                    $unauthorized_tokens = (!empty($result['headers']['x-putler-invalid-token'])) ? $result['headers']['x-putler-invalid-token'] : '';
+                    return new WP_Error( $result['response']['code'], $result['response']['message'], $unauthorized_tokens );
                 }
             }
             return false;
@@ -171,7 +184,6 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
 
             //Getting the data from ecommerce plugins
             $params = apply_filters( 'putler_connector_get_orders', $params );
-            
             
             // Check if all orders are received...
             foreach ( (array) $params as $connector => $orders ) {
@@ -203,8 +215,6 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
                 }
             }
             
-            
-
             if ($all_done === true) {
                 $response = array( 'status' => 'ALL_DONE', 'message' => '' ) ;    
             } else {

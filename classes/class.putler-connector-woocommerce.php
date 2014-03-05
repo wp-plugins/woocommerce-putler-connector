@@ -89,6 +89,8 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                      $order_ids[] = $results_order_detail['id'];
                  }
                  
+
+
                     //Query to get the Order_items
                     
                     $item_details = array();
@@ -261,7 +263,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
 
                     $results_order_item_details = $wpdb->get_results( $query_order_item_details, 'ARRAY_A' );
                     $results_order_item_details_count = $wpdb->num_rows;
-                                      
+
                     if( $results_order_item_details_count > 0 ){
                         
                         $order_items = array();
@@ -354,15 +356,33 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                             $response ['Contact_Phone_Number'] = isset( $order_items[$order_id]['_billing_phone']) ? $order_items[$order_id]['_billing_phone'] : '';
                             $response ['Subscription_ID'] = '';
 
-                            $transactions [] = $response;
-                            
-                            foreach( $item_details[$order_id]['cart_items'] as $cart_item ) {
+                            if((! empty($params['order_id'])) && $order_status[$order_detail['term_taxonomy_id']] == "refunded") {
+
+                                $date_gmt_modified = $order_detail['modified_date'];
+
+                                $response ['Date'] = date('m/d/Y', (int)strtotime($date_gmt_modified));
+                                $response ['Time'] = date('h:i:s A', (int)strtotime($date_gmt_modified));
+
+                                $response ['Type'] = 'Refund';
+                                $response ['Status'] = 'Completed';
+                                $response ['Gross'] = -$order_total;
+                                $response ['Net'] = -$order_total;
+                                $response ['Transaction_ID'] = $order_id . '_R';
+                                $response ['Reference_Txn_ID'] = $order_id;
+
+                                $transactions [] = $response;
+
+                            } else {
+
+                                $transactions [] = $response;
+
+                                foreach( $item_details[$order_id]['cart_items'] as $cart_item ) {
 
                                     $order_item = array();
                                     $order_item ['Type'] = 'Shopping Cart Item';
                                     $order_item ['Item_Title'] = $cart_item['product_name'];
                                     
-   
+
                                     if ( $cart_item['_variation_id'] != '' ) {
                                         $order_item ['Item_ID'] = (isset( $products_sku[$cart_item['_variation_id']] )) ? $products_sku[$cart_item['_variation_id']] : $cart_item['_variation_id'];
                                         $product_id = $cart_item['_variation_id'];
@@ -387,11 +407,9 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                         }    
                                     }
                                     
-
                                     $transactions [] = array_merge ( $response, $order_item );
 
                                     if( $order_status[$order_detail['term_taxonomy_id']] == "refunded"){
-
                                         $date_gmt_modified = $order_detail['modified_date'];
 
                                         $response ['Date'] = date('m/d/Y', (int)strtotime($date_gmt_modified));
@@ -405,12 +423,11 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                         $response ['Reference_Txn_ID'] = $order_id;
 
                                         $transactions [] = $response;
-                                    }
 
+                                    }
+                                }
                             }
-                            
                         }
-                        
                     } else {
                         
                     }
@@ -425,8 +442,6 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
              } else {
                 
              }
-             
-            
             
             return $params;
         }
