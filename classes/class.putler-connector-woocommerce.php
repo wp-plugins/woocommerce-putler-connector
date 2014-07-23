@@ -285,7 +285,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                             $order_total = round ( $order_items[$order_id]['_order_total'], 2 );
                             $date_gmt  = $order_detail['date'];
                             $dateInGMT = date('m/d/Y', (int)strtotime($date_gmt));
-                            $timeInGMT = date('h:i:s A', (int)strtotime($date_gmt));
+                            $timeInGMT = date('H:i:s', (int)strtotime($date_gmt));
                             
                             if ($order_status[$order_detail['term_taxonomy_id']] == "on-hold" || $order_status[$order_detail['term_taxonomy_id']] == "pending" || $order_status[$order_detail['term_taxonomy_id']] == "failed") {
                                     $order_status_display = 'Pending';
@@ -361,7 +361,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                 $date_gmt_modified = $order_detail['modified_date'];
 
                                 $response ['Date'] = date('m/d/Y', (int)strtotime($date_gmt_modified));
-                                $response ['Time'] = date('h:i:s A', (int)strtotime($date_gmt_modified));
+                                $response ['Time'] = date('H:i:s', (int)strtotime($date_gmt_modified));
 
                                 $response ['Type'] = 'Refund';
                                 $response ['Status'] = 'Completed';
@@ -413,7 +413,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                         $date_gmt_modified = $order_detail['modified_date'];
 
                                         $response ['Date'] = date('m/d/Y', (int)strtotime($date_gmt_modified));
-                                        $response ['Time'] = date('h:i:s A', (int)strtotime($date_gmt_modified));
+                                        $response ['Time'] = date('H:i:s', (int)strtotime($date_gmt_modified));
 
                                         $response ['Type'] = 'Refund';
                                         $response ['Status'] = 'Completed';
@@ -442,7 +442,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
              } else {
                 
              }
-            
+
             return $params;
         }
     }

@@ -37,7 +37,6 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
         private function __construct() {
 
             $this->text_domain = 'putler_connector';
-
             $this->api_url = 'https://api.putler.com/inbound/';
             
             if ( is_admin() ) {
@@ -74,7 +73,7 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
         public function display_settings_page() {
             
             // Enque JS file
-            wp_enqueue_script( 'putler-connector-js', plugins_url( '../assets/putler-connector.js', __FILE__) , array( 'jquery', 'jquery-ui-progressbar' ), $this->version, true );            
+            wp_enqueue_script( 'putler-connector-js', plugins_url( '../assets/putler-connector.js', __FILE__) , array( 'jquery', 'jquery-ui-progressbar' ), $this->version, true );
             
             $putler_params = array ('image_url' => plugins_url('../assets/images/', __FILE__) );
             wp_localize_script( 'putler-connector-js', 'putler_params', $putler_params );
@@ -115,6 +114,7 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
             if ( !empty($_POST['putler_api_token']) && !empty($_POST['putler_email_address']) ) {
                 $token = trim($_POST['putler_api_token']);
                 $email = trim($_POST['putler_email_address']);
+
                 $result = $this->validate_api_info( $token, $email );
                 if ( $result === true ) {
 
@@ -147,6 +147,7 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
 
         private function validate_api_info( $token, $email ) {
             // Validate with API server
+            
             $result = wp_remote_head( $this->api_url, 
                         array( 'headers' => array(
                                 'Authorization' => 'Basic ' . base64_encode( $email . ':' . $token ),
@@ -154,6 +155,8 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
                                 )
                             )
                         );
+
+
 
             if (is_wp_error( $result )) {
                 return $result;
