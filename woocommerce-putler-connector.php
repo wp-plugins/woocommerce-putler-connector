@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Putler Connector
  * Plugin URI: http://putler.com/connector/woocommerce/
  * Description: Track WooCommerce transactions data with Putler. Insightful reporting that grows your business.
- * Version: 2.0
+ * Version: 2.1
  * Author: putler, storeapps
  * Author URI: http://putler.com/
  * License: GPL 3.0

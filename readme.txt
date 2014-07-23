@@ -2,8 +2,8 @@
 Contributors: putler, storeapps
 Tags: administration, putler, woocommerce, ecommerce, management, reporting, analysis, sales, products, orders, history, customers, graphs, charts
 Requires at least: 3.3
-Tested up to: 3.8.1
-Stable tag: 2.0
+Tested up to: 3.9.1
+Stable tag: 2.1
 License: GPL 3.0
 
 
@@ -57,6 +57,9 @@ Yes, you can use this connector with free version of Putler.
 
 == Changelog ==
 
+= 2.1 =
+* Fix: Date & Timezone issue
+
 = 2.0 =
 * New: Support for multiple API Tokens
 * Fix: Minor Fixes and compatibilty
@@ -69,6 +72,9 @@ Yes, you can use this connector with free version of Putler.
 
 
 == Upgrade Notice ==
+
+= 2.1 =
+Fixes related to date & timezone issue, recommended upgrade.
 
 = 2.0 =
 Support for multiple API Tokens and Minor Fixes and compatibilty, recommended upgrade.
