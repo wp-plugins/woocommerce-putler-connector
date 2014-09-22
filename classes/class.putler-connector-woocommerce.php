@@ -11,19 +11,33 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
         public function __construct() {
             add_filter('putler_connector_get_order_count', array( &$this, 'get_order_count') );
             add_filter('putler_connector_get_orders', array( &$this, 'get_orders') );
+
+            //Flag for woo2.2+
+            if (version_compare ( WOOCOMMERCE_VERSION, '2.2.0', '<' )) {
+                define ( 'SM_IS_WOO22', "false" );
+            } else {
+                define ( 'SM_IS_WOO22', "true" );
+            }
+
         }
 
         public function get_order_count( $count )  {
             global $wpdb;
             $order_count = 0;
+            $post_order_cond = '';
             
+            //Flag for woo2.2+
+            if (! (defined('SM_IS_WOO22') && SM_IS_WOO22)) {
+                $post_order_cond = " AND posts.post_status IN ('publish','draft')";
+            }
+
             $query_to_fetch_order_count = "SELECT COUNT(posts.ID) as id
                                             FROM {$wpdb->prefix}posts AS posts 
                                             WHERE posts.post_type LIKE 'shop_order' 
-                                                AND posts.post_status IN ('publish','draft') ";
+                                                 $post_order_cond";
             
             $order_count_result = $wpdb->get_col( $query_to_fetch_order_count );
-            
+
             if( !empty( $order_count_result ) ) {
                     $order_count = $order_count_result[0];
             }
@@ -48,32 +62,41 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                 $cond = 'AND posts.ID IN(' .intval($params['order_id']). ')'; 
             }
             
-            
-            //Code to get all the term_names along with the term_taxonomy_id in an array
-            $query_order_status = "SELECT terms.name as order_status,
-                                    term_taxonomy.term_taxonomy_id 
-                                    FROM {$wpdb->prefix}term_taxonomy AS term_taxonomy
-                                    JOIN {$wpdb->prefix}terms AS terms ON (terms.term_id = term_taxonomy.term_id)
-                                    WHERE taxonomy LIKE 'shop_order_status'";
-                                    
-            $results_order_status = $wpdb->get_results( $query_order_status, 'ARRAY_A' );
 
-            $order_status = array();
+            //Flag for woo2.2+
+            if (defined('SM_IS_WOO22') && SM_IS_WOO22 == 'true') {
+                $terms_post_join = '';
+                $terms_select = "posts.post_status AS order_status";
+            } else {
+                //Code to get all the term_names along with the term_taxonomy_id in an array
+                $query_order_status = "SELECT terms.name as order_status,
+                                        term_taxonomy.term_taxonomy_id 
+                                        FROM {$wpdb->prefix}term_taxonomy AS term_taxonomy
+                                        JOIN {$wpdb->prefix}terms AS terms ON (terms.term_id = term_taxonomy.term_id)
+                                        WHERE taxonomy LIKE 'shop_order_status'";
+                                        
+                $results_order_status = $wpdb->get_results( $query_order_status, 'ARRAY_A' );
 
-            foreach ($results_order_status as $results_order_status1) {
+                $order_status = array();
+
+                foreach ($results_order_status as $results_order_status1) {
                     $order_status[$results_order_status1['term_taxonomy_id']] = $results_order_status1['order_status'];
+                }
+
+                $terms_post_join = "JOIN ".$wpdb->prefix ."term_relationships AS term_relationships ON (term_relationships.object_id = posts.ID AND posts.post_status IN ('publish','draft'))";
+                $terms_select = "term_relationships.term_taxonomy_id AS term_taxonomy_id";
             }
+            
+            
             
             $query_order_details = "SELECT posts.ID as id,
                                         posts.post_excerpt as order_note,
                                         date_format(posts.post_date_gmt,'%Y-%m-%d %T') AS date,
                                         date_format(posts.post_modified_gmt,'%Y-%m-%d %T') AS modified_date,
-                                        term_relationships.term_taxonomy_id AS term_taxonomy_id
+                                        $terms_select
                                         FROM {$wpdb->prefix}posts AS posts 
-                                            JOIN {$wpdb->prefix}term_relationships AS term_relationships 
-                                                ON term_relationships.object_id = posts.ID 
-                                        WHERE posts.post_type LIKE 'shop_order' 
-                                                AND posts.post_status IN ('publish','draft')
+                                             $terms_post_join
+                                        WHERE posts.post_type LIKE 'shop_order'
                                                 $cond
                                         GROUP BY posts.ID
                                         LIMIT ". $start_limit .",". $batch_limit;
@@ -89,8 +112,6 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                      $order_ids[] = $results_order_detail['id'];
                  }
                  
-
-
                     //Query to get the Order_items
                     
                     $item_details = array();
@@ -143,7 +164,6 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                         }  
                     }
 
-                    
                     //Query to get the SKU for the products
 
                     $query_sku = "SELECT postmeta.post_id AS id,
@@ -205,9 +225,9 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                 $att_name = '';
                                 $att_val = '';
 
-                                if ( strpos($variation_att['meta_key'],'custom') === false ) { 
-                                    $variation_att['meta_value'] = $attributes[$variation_att['meta_value']];
-                                }
+                                // if ( strpos($variation_att['meta_key'],'custom') === false ) { 
+                                //     $variation_att['meta_value'] = $attributes[$variation_att['meta_value']];
+                                // }
 
 
                                 if ( empty($variations[$variation_att['id']]) ) {
@@ -217,9 +237,11 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
 
                                 if ( strpos($variation_att['meta_key'],'pa') !== false ) {
                                      $att_name = substr($variation_att['meta_key'], strpos($variation_att['meta_key'],'pa')+3);
-                                     $att_val = $variation_att['meta_value'];
-                                } else if ( strpos($variation_att['meta_key'],'custom') !== false ) {
-                                    $att_name = 'custom';
+                                     $att_val = (!empty($attributes[$variation_att['meta_value']])) ? $attributes[$variation_att['meta_value']] : '';
+                                // } else if ( strpos($variation_att['meta_key'],'custom') !== false ) {
+                                } else {
+                                    // $att_name = 'custom';
+                                    $att_name = ucfirst(substr($variation_att['meta_key'], strpos($variation_att['meta_key'],'_')+1));
                                     $att_val = $variation_att['meta_value'];
                                 }    
 
@@ -277,7 +299,6 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                             $order_items[$detail['id']][$detail['meta_key']] = $detail['meta_value'];
                         }
                         
-                        
                         //Code for Data Mapping as per Putler
                         foreach( $results_order_details as $order_detail ){
 
@@ -287,13 +308,21 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                             $dateInGMT = date('m/d/Y', (int)strtotime($date_gmt));
                             $timeInGMT = date('H:i:s', (int)strtotime($date_gmt));
                             
-                            if ($order_status[$order_detail['term_taxonomy_id']] == "on-hold" || $order_status[$order_detail['term_taxonomy_id']] == "pending" || $order_status[$order_detail['term_taxonomy_id']] == "failed") {
+                            if (defined('SM_IS_WOO22') && SM_IS_WOO22 == 'true') {
+                                $order_status_new = (!empty($order_detail['order_status'])) ? substr($order_detail['order_status'],3) : '';
+                            } else {
+                                $order_status_new = (!empty($order_status[$order_detail['term_taxonomy_id']])) ? $order_status[$order_detail['term_taxonomy_id']] : '';
+                            }
+
+                            if ($order_status_new== "on-hold" || $order_status_new== "pending" || $order_status_new== "failed") {
                                     $order_status_display = 'Pending';
-                            } else if ($order_status[$order_detail['term_taxonomy_id']] == "completed" || $order_status[$order_detail['term_taxonomy_id']] == "processing" || $order_status[$order_detail['term_taxonomy_id']] == "refunded") {
+                            } else if ($order_status_new== "completed" || $order_status_new== "processing" || $order_status_new== "refunded") {
                                     $order_status_display = 'Completed';
-                            } else if ($order_status[$order_detail['term_taxonomy_id']] == "cancelled") {
+                            } else if ($order_status_new== "cancelled") {
                                     $order_status_display = 'Cancelled';
                             }
+
+
 
                             // $response['date_time'] = $date_gmt;
                             $response ['Date'] = $dateInGMT;
@@ -342,7 +371,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                             $response ['Reference_Txn_ID'] = '';
                             $response ['Invoice_Number'] = '';
                             $response ['Custom_Number'] = '';
-                            $response ['Quantity'] = $item_details[$order_id]['tot_qty']; 
+                            $response ['Quantity'] = (!empty($item_details[$order_id]['tot_qty'])) ? $item_details[$order_id]['tot_qty'] : ''; 
                             $response ['Receipt_ID'] = '';
 
                             $response ['Balance'] = '';
@@ -356,7 +385,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                             $response ['Contact_Phone_Number'] = isset( $order_items[$order_id]['_billing_phone']) ? $order_items[$order_id]['_billing_phone'] : '';
                             $response ['Subscription_ID'] = '';
 
-                            if((! empty($params['order_id'])) && $order_status[$order_detail['term_taxonomy_id']] == "refunded") {
+                            if((! empty($params['order_id'])) && $order_status_new== "refunded") {
 
                                 $date_gmt_modified = $order_detail['modified_date'];
 
@@ -375,8 +404,9 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                             } else {
 
                                 $transactions [] = $response;
+                                $cart_items = (!empty($item_details[$order_id]['cart_items'])) ? $item_details[$order_id]['cart_items'] : array();
 
-                                foreach( $item_details[$order_id]['cart_items'] as $cart_item ) {
+                                foreach( $cart_items as $cart_item ) {
 
                                     $order_item = array();
                                     $order_item ['Type'] = 'Shopping Cart Item';
@@ -409,7 +439,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                     
                                     $transactions [] = array_merge ( $response, $order_item );
 
-                                    if( $order_status[$order_detail['term_taxonomy_id']] == "refunded"){
+                                    if( $order_status_new== "refunded"){
                                         $date_gmt_modified = $order_detail['modified_date'];
 
                                         $response ['Date'] = date('m/d/Y', (int)strtotime($date_gmt_modified));
@@ -428,8 +458,6 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                 }
                             }
                         }
-                    } else {
-                        
                     }
             
                     if ( empty($params['order_id']) ) {
@@ -439,11 +467,8 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                         $params['data'] = $transactions;
                     }
                     
-             } else {
-                
              }
-
-            return $params;
+           return $params;
         }
     }
 }

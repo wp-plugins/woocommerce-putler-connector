@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Putler Connector
  * Plugin URI: http://putler.com/connector/woocommerce/
  * Description: Track WooCommerce transactions data with Putler. Insightful reporting that grows your business.
- * Version: 2.1
+ * Version: 2.2
  * Author: putler, storeapps
  * Author URI: http://putler.com/
  * License: GPL 3.0
@@ -46,10 +46,17 @@ function woocommerce_putler_connector_init() {
 
 function woocommerce_putler_connector_order_updated( $post_id ) {
 
-	$order_status_old = get_the_terms( $post_id,'shop_order_status');
+	//Flag for woo2.2+
 	$order_status_new = $_POST['order_status'];
 
-	if ( get_post_type( $post_id ) === 'shop_order' && $order_status_old[0]->slug == $order_status_new ) {
+    if (version_compare ( WOOCOMMERCE_VERSION, '2.2.0', '<' )) {
+    	$order_status_old = get_the_terms( $post_id,'shop_order_status');
+    	$order_status_old = $order_status_old[0]->slug;
+    } else {
+    	$order_status_old = get_post_status( $post_id );
+    }
+	
+	if ( get_post_type( $post_id ) === 'shop_order' &&  $order_status_old == $order_status_new ) {
 		woocommerce_putler_connector_post_order($post_id);
 	}
 }

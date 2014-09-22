@@ -2,8 +2,8 @@
 Contributors: putler, storeapps
 Tags: administration, putler, woocommerce, ecommerce, management, reporting, analysis, sales, products, orders, history, customers, graphs, charts
 Requires at least: 3.3
-Tested up to: 3.9.1
-Stable tag: 2.1
+Tested up to: 4.0
+Stable tag: 2.2
 License: GPL 3.0
 
 
@@ -57,6 +57,10 @@ Yes, you can use this connector with free version of Putler.
 
 == Changelog ==
 
+= 2.2 =
+* Update: Compatibility with new versions of WordPress & WooCommerce (v2.2 or greater)
+* Fixed: Issue with syncing of product custom attributes 
+
 = 2.1 =
 * Fix: Date & Timezone issue
 
@@ -72,6 +76,9 @@ Yes, you can use this connector with free version of Putler.
 
 
 == Upgrade Notice ==
+
+= 2.2 =
+Compatibility with new versions of WordPress & WooCommerce (v2.2 or greater) along with some important updates and fixes, recommended upgrade. 
 
 = 2.1 =
 Fixes related to date & timezone issue, recommended upgrade.
