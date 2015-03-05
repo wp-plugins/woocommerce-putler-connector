@@ -27,7 +27,9 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
             $post_order_cond = '';
             
             //Flag for woo2.2+
-            if (! (defined('SM_IS_WOO22') && SM_IS_WOO22)) {
+            if ( (defined('SM_IS_WOO22') && SM_IS_WOO22) ) {
+                $post_order_cond = " AND posts.post_status NOT IN ('trash')";
+            } else {                
                 $post_order_cond = " AND posts.post_status IN ('publish','draft')";
             }
 
@@ -67,6 +69,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
             if (defined('SM_IS_WOO22') && SM_IS_WOO22 == 'true') {
                 $terms_post_join = '';
                 $terms_select = "posts.post_status AS order_status";
+                $post_order_cond = " AND posts.post_status NOT IN ('trash')";
             } else {
                 //Code to get all the term_names along with the term_taxonomy_id in an array
                 $query_order_status = "SELECT terms.name as order_status,
@@ -85,6 +88,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
 
                 $terms_post_join = "JOIN ".$wpdb->prefix ."term_relationships AS term_relationships ON (term_relationships.object_id = posts.ID AND posts.post_status IN ('publish','draft'))";
                 $terms_select = "term_relationships.term_taxonomy_id AS term_taxonomy_id";
+                $post_order_cond = " AND posts.post_status IN ('publish','draft')";
             }
             
             
@@ -98,12 +102,13 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                              $terms_post_join
                                         WHERE posts.post_type LIKE 'shop_order'
                                                 $cond
+                                                $post_order_cond
                                         GROUP BY posts.ID
                                         LIMIT ". $start_limit .",". $batch_limit;
 
              $results_order_details = $wpdb->get_results( $query_order_details, 'ARRAY_A' );
              $results_order_details_count = $wpdb->num_rows;
-             
+
              if ( $results_order_details_count > 0 ) {
                  
                  $order_ids = array(); 
@@ -314,10 +319,15 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                 $order_status_new = (!empty($order_status[$order_detail['term_taxonomy_id']])) ? $order_status[$order_detail['term_taxonomy_id']] : '';
                             }
 
+                            $verbose_status = '';
                             if ($order_status_new== "on-hold" || $order_status_new== "pending" || $order_status_new== "failed") {
                                     $order_status_display = 'Pending';
-                            } else if ($order_status_new== "completed" || $order_status_new== "processing" || $order_status_new== "refunded") {
+                                    $verbose_status = ($order_status_new != "pending") ? $order_status_new : '';
+                            } else if ($order_status_new== "completed" || $order_status_new== "processing") {
                                     $order_status_display = 'Completed';
+                                    $verbose_status = ($order_status_new != "completed") ? $order_status_new : '';
+                            } else if ($order_status_new== "refunded") {
+                                    $order_status_display = 'Refunded';
                             } else if ($order_status_new== "cancelled") {
                                     $order_status_display = 'Cancelled';
                             }
@@ -362,7 +372,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                             $response ['Option_2_Name'] = '';
                             $response ['Option_2_Value'] = '';
                             
-                            $response ['Auction_Site'] = '';
+                            $response ['Auction_Site'] = ($verbose_status != '') ? $verbose_status : '';
                             $response ['Buyer_ID'] = '';
                             $response ['Item_URL'] = '';
                             $response ['Closing_Date'] = '';
@@ -394,6 +404,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
 
                                 $response ['Type'] = 'Refund';
                                 $response ['Status'] = 'Completed';
+                                $response ['Auction_Site'] = '';
                                 $response ['Gross'] = -$order_total;
                                 $response ['Net'] = -$order_total;
                                 $response ['Transaction_ID'] = $order_id . '_R';
@@ -413,7 +424,7 @@ if ( ! class_exists( 'WooCommerce_Putler_Connector' ) ) {
                                     $order_item ['Item_Title'] = $cart_item['product_name'];
                                     
 
-                                    if ( $cart_item['_variation_id'] != '' ) {
+                                    if ( !empty($cart_item['_variation_id']) ) {
                                         $order_item ['Item_ID'] = (isset( $products_sku[$cart_item['_variation_id']] )) ? $products_sku[$cart_item['_variation_id']] : $cart_item['_variation_id'];
                                         $product_id = $cart_item['_variation_id'];
                                     } else {

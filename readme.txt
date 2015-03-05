@@ -2,8 +2,8 @@
 Contributors: putler, storeapps
 Tags: administration, putler, woocommerce, ecommerce, management, reporting, analysis, sales, products, orders, history, customers, graphs, charts
 Requires at least: 3.3
-Tested up to: 4.0
-Stable tag: 2.2
+Tested up to: 4.1.1
+Stable tag: 2.3
 License: GPL 3.0
 
 
@@ -47,6 +47,10 @@ All past orders will be sent to Putler. New orders will be automatically synced.
 
 Yes, you can use this connector with free version of Putler.
 
+= Can I sync data to multiple Putler instances? =
+
+Yes, you can sync data to multiple Putler instances using Putler API tokens separated by comma.
+
 == Screenshots ==
 
 1. WooCommerce Putler Connector Settings Page
@@ -56,6 +60,12 @@ Yes, you can use this connector with free version of Putler.
 3. Adding a new account in Putler - Notice API token that needs to be copied to Putler Connector settings
 
 == Changelog ==
+
+= 2.3 =
+* Update: Transactions will show updated statuses in Putler.
+* Update: Compatibility with new versions of WordPress & WooCommerce (v2.3 or greater)
+* Fixed: Issue of product SKU not getting synced
+* Fixed: Issue of orders in trash getting synced
 
 = 2.2 =
 * Update: Compatibility with new versions of WordPress & WooCommerce (v2.2 or greater)
@@ -76,6 +86,9 @@ Yes, you can use this connector with free version of Putler.
 
 
 == Upgrade Notice ==
+
+= 2.3 =
+Updates related to transactions will show updated statuses in Putler, compatibility with new versions of WordPress & WooCommerce (v2.3 or greater) along with some important updates and fixes, recommended upgrade.
 
 = 2.2 =
 Compatibility with new versions of WordPress & WooCommerce (v2.2 or greater) along with some important updates and fixes, recommended upgrade. 

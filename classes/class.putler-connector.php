@@ -38,7 +38,6 @@ if ( ! class_exists( 'Putler_Connector' ) ) {
 
             $this->text_domain = 'putler_connector';
             $this->api_url = 'https://api.putler.com/inbound/';
-            //$this->api_url = 'http://192.168.0.124/InboundAPI/inbound/';
             
             if ( is_admin() ) {
                 $this->settings_url = admin_url('tools.php?page=putler_connector');
